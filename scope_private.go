@@ -212,7 +212,7 @@ var hasCountRegexp = regexp.MustCompile(`(?i)count\(.+\)`)
 
 func (scope *Scope) selectSql() string {
 	if len(scope.Search.selects) == 0 {
-		if scope.Search.joins != "" {
+		if len(scope.Search.joins) > 0 {
 			return fmt.Sprintf("%v.*", scope.QuotedTableName())
 		}
 		return "*"
@@ -295,7 +295,27 @@ func (scope *Scope) havingSql() string {
 }
 
 func (scope *Scope) joinsSql() string {
-	return scope.Search.joins + " "
+	if scope.Search.joins == nil {
+		return ""
+	}
+
+	var joinClauses []string
+
+	for _, clause := range scope.Search.joins {
+		if sql := scope.buildWhereCondition(clause); sql != "" {
+			if sql[0] == '(' {
+				sql = sql[1 : len(sql)-1]
+			}
+			joinClauses = append(joinClauses, sql)
+		}
+	}
+
+	combinedSql := strings.Join(joinClauses, " ")
+	if len(combinedSql) == 0 {
+		return ""
+	}
+
+	return combinedSql + " "
 }
 
 func (scope *Scope) prepareQuerySql() {
