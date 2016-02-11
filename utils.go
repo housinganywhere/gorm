@@ -134,7 +134,7 @@ func toQueryMarks(primaryValues [][]interface{}) string {
 
 	for _, primaryValue := range primaryValues {
 		var marks []string
-		for _,_ = range primaryValue {
+		for _, _ = range primaryValue {
 			marks = append(marks, "?")
 		}
 
@@ -171,7 +171,7 @@ func toQueryValues(values [][]interface{}) (results []interface{}) {
 func fileWithLineNum() string {
 	for i := 2; i < 15; i++ {
 		_, file, line, ok := runtime.Caller(i)
-		if ok && (!regexp.MustCompile(`jinzhu/gorm/.*.go`).MatchString(file) || regexp.MustCompile(`jinzhu/gorm/.*test.go`).MatchString(file)) {
+		if ok && (!regexp.MustCompile(`housinganywhere/gorm/.*.go`).MatchString(file) || regexp.MustCompile(`housinganywhere/gorm/.*test.go`).MatchString(file)) {
 			return fmt.Sprintf("%v:%v", file, line)
 		}
 	}

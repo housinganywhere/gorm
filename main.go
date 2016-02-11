@@ -34,10 +34,10 @@ type DB struct {
 //       db, err := gorm.Open("mysql", "user:password@/dbname?charset=utf8&parseTime=True&loc=Local")
 //     }
 // GORM has wrapped some drivers, for easier to remember driver's import path, so you could import the mysql driver with
-//    import _ "github.com/jinzhu/gorm/dialects/mysql"
-//    // import _ "github.com/jinzhu/gorm/dialects/postgres"
-//    // import _ "github.com/jinzhu/gorm/dialects/sqlite"
-//    // import _ "github.com/jinzhu/gorm/dialects/mssql"
+//    import _ "github.com/housinganywhere/gorm/dialects/mysql"
+//    // import _ "github.com/housinganywhere/gorm/dialects/postgres"
+//    // import _ "github.com/housinganywhere/gorm/dialects/sqlite"
+//    // import _ "github.com/housinganywhere/gorm/dialects/mssql"
 func Open(dialect string, args ...interface{}) (*DB, error) {
 	var db DB
 	var err error

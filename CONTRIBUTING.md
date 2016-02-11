@@ -19,7 +19,7 @@
 
 - You are welcome ;)
 - You can help improve the README by making them more coherent, consistent or readable, and add more godoc documents to make people easier to follow.
-- Blogs & Usage Guides & PPT also welcome, please add them to https://github.com/jinzhu/gorm/wiki/Guides
+- Blogs & Usage Guides & PPT also welcome, please add them to https://github.com/housinganywhere/gorm/wiki/Guides
 
 ### Executable script template
 
@@ -28,7 +28,7 @@ package main
 
 import (
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"github.com/housinganywhere/gorm"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )

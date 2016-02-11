@@ -2,9 +2,9 @@
 
 The fantastic ORM library for Golang, aims to be developer friendly.
 
-[![Join the chat at https://gitter.im/jinzhu/gorm](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jinzhu/gorm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/housinganywhere/gorm](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/housinganywhere/gorm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![wercker status](https://app.wercker.com/status/0cb7bb1039e21b74f8274941428e0921/s/master "wercker status")](https://app.wercker.com/project/bykey/0cb7bb1039e21b74f8274941428e0921)
-[![GoDoc](https://godoc.org/github.com/jinzhu/gorm?status.svg)](https://godoc.org/github.com/jinzhu/gorm)
+[![GoDoc](https://godoc.org/github.com/housinganywhere/gorm?status.svg)](https://godoc.org/github.com/housinganywhere/gorm)
 
 ## Overview
 
@@ -39,8 +39,8 @@ The fantastic ORM library for Golang, aims to be developer friendly.
 
 # Contributors
 
-https://github.com/jinzhu/gorm/graphs/contributors
+https://github.com/housinganywhere/gorm/graphs/contributors
 
 ## License
 
-Released under the [MIT License](https://github.com/jinzhu/gorm/blob/master/License).
+Released under the [MIT License](https://github.com/housinganywhere/gorm/blob/master/License).
