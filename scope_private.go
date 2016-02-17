@@ -320,7 +320,11 @@ func (scope *Scope) joinsSql() string {
 
 func (scope *Scope) prepareQuerySql() {
 	if scope.Search.raw {
-		scope.Raw(strings.TrimSuffix(strings.TrimPrefix(scope.CombinedConditionSql(), " WHERE ("), ")"))
+		s := scope.CombinedConditionSql()
+		s = strings.TrimPrefix(s, " ")
+		s = strings.TrimPrefix(s, "WHERE (")
+		s = strings.TrimSuffix(s, ")")
+		scope.Raw(s)
 	} else {
 		scope.Raw(fmt.Sprintf("SELECT %v %v FROM %v %v", scope.topSql(), scope.selectSql(), scope.QuotedTableName(), scope.CombinedConditionSql()))
 	}
