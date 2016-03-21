@@ -145,18 +145,24 @@ func (scope *Scope) handleHasManyPreload(field *Field, conditions []interface{})
 	resultValues := reflect.Indirect(reflect.ValueOf(results))
 
 	if scope.IndirectValue().Kind() == reflect.Slice {
+		objects := scope.IndirectValue()
+		objectsByKey := make(map[string]int)
+		for j := 0; j < objects.Len(); j++ {
+			object := reflect.Indirect(objects.Index(j))
+			keyI := getRealValue(object, relation.AssociationForeignFieldNames)
+			key := fmt.Sprintf("%v", keyI)
+			objectsByKey[key] = j
+		}
+
 		for i := 0; i < resultValues.Len(); i++ {
 			result := resultValues.Index(i)
-			value := getRealValue(result, relation.ForeignFieldNames)
-			objects := scope.IndirectValue()
-			for j := 0; j < objects.Len(); j++ {
-				object := reflect.Indirect(objects.Index(j))
-				if equalAsString(getRealValue(object, relation.AssociationForeignFieldNames), value) {
-					f := object.FieldByName(field.Name)
-					f.Set(reflect.Append(f, result))
-					break
-				}
-			}
+			valueI := getRealValue(result, relation.ForeignFieldNames)
+			value := fmt.Sprintf("%v", valueI)
+
+			objectsIndex := objectsByKey[value]
+			object := objects.Index(objectsIndex)
+			f := object.FieldByName(field.Name)
+			f.Set(reflect.Append(f, result))
 		}
 	} else {
 		scope.SetColumn(field, resultValues)
