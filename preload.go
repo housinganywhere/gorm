@@ -160,7 +160,7 @@ func (scope *Scope) handleHasManyPreload(field *Field, conditions []interface{})
 			value := fmt.Sprintf("%v", valueI)
 
 			objectsIndex := objectsByKey[value]
-			object := objects.Index(objectsIndex)
+			object := reflect.Indirect(objects.Index(objectsIndex))
 			f := object.FieldByName(field.Name)
 			f.Set(reflect.Append(f, result))
 		}
