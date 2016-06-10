@@ -248,11 +248,11 @@ func (scope *Scope) AddToVars(value interface{}) string {
 	if expr, ok := value.(*expr); ok {
 		exp := expr.expr
 		for _, arg := range expr.args {
-			exp = strings.Replace(exp, "?", scope.AddToVars(arg), 1)
+			exp = strings.Replace(exp, "?", scope.AddToVars(ToUTC(arg)), 1)
 		}
 		return exp
 	} else {
-		scope.SqlVars = append(scope.SqlVars, value)
+		scope.SqlVars = append(scope.SqlVars, ToUTC(value))
 		return scope.Dialect().BinVar(len(scope.SqlVars))
 	}
 }

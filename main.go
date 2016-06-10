@@ -550,3 +550,12 @@ func (s *DB) GetErrors() (errors []error) {
 	}
 	return
 }
+
+// housinganywhere (author: jakub@slocki.net) force UTC on db communication
+
+func ToUTC(v interface{}) interface{} {
+	if tm, ok := v.(time.Time); ok {
+		return tm.UTC()
+	}
+	return v
+}
