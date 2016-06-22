@@ -10,12 +10,12 @@ func AssignUpdateAttributes(scope *Scope) {
 		if maps := convertInterfaceToMap(attrs); len(maps) > 0 {
 			protected, ok := scope.Get("gorm:ignore_protected_attrs")
 			_, updateColumn := scope.Get("gorm:update_column")
-			updateAttrs, hasUpdate := scope.updatedAttrsWithValues(maps, ok && protected.(bool))
+			_, hasUpdate := scope.updatedAttrsWithValues(maps, ok && protected.(bool))
 
 			if updateColumn {
 				scope.InstanceSet("gorm:update_attrs", maps)
-			} else if len(updateAttrs) > 0 {
-				scope.InstanceSet("gorm:update_attrs", updateAttrs)
+			} else if hasUpdate {
+				scope.InstanceSet("gorm:update_attrs", maps)
 			} else if !hasUpdate {
 				scope.SkipLeft()
 				return
