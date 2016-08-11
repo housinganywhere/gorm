@@ -1,6 +1,9 @@
 package gorm
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // Define callbacks for deleting
 func init() {
@@ -13,6 +16,11 @@ func init() {
 
 // beforeDeleteCallback will invoke `BeforeDelete` method before deleting
 func beforeDeleteCallback(scope *Scope) {
+	if !scope.hasConditions() {
+		scope.Err(errors.New("no WHERE clause while deleting"))
+		return
+	}
+
 	if !scope.HasError() {
 		scope.CallMethod("BeforeDelete")
 	}

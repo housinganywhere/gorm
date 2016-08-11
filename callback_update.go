@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -31,6 +32,11 @@ func assignUpdatingAttributesCallback(scope *Scope) {
 
 // beforeUpdateCallback will invoke `BeforeSave`, `BeforeUpdate` method before updating
 func beforeUpdateCallback(scope *Scope) {
+	if !scope.hasConditions() {
+		scope.Err(errors.New("no WHERE clause while updating"))
+		return
+	}
+
 	if _, ok := scope.Get("gorm:update_column"); !ok {
 		if !scope.HasError() {
 			scope.CallMethod("BeforeSave")
