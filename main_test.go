@@ -42,16 +42,38 @@ func init() {
 }
 
 func OpenTestConnection() (db gorm.DB, err error) {
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	dbname := os.Getenv("DBNAME")
+	if dbname == "" {
+		dbname = "gorm"
+	}
+	user := os.Getenv("USER")
+	if user == "" {
+		user = "gorm"
+	}
+	password := os.Getenv("PASSWORD")
 	switch os.Getenv("GORM_DIALECT") {
 	case "mysql":
 		// CREATE USER 'gorm'@'localhost' IDENTIFIED BY 'gorm';
 		// CREATE DATABASE gorm;
 		// GRANT ALL ON gorm.* TO 'gorm'@'localhost';
 		fmt.Println("testing mysql...")
-		db, err = gorm.Open("mysql", "gorm:gorm@/gorm?charset=utf8&parseTime=True")
+		uri := fmt.Sprintf(
+			"%s:%s@%s/%s?charset=utf8&parseTime=True",
+			user, password, dbname, host,
+		)
+		db, err = gorm.Open("mysql", uri)
 	case "postgres":
 		fmt.Println("testing postgres...")
-		db, err = gorm.Open("postgres", "user=gorm DB.name=gorm sslmode=disable")
+		conninfo := fmt.Sprintf(
+			"user=%s password=%s host=%s dbname=%s sslmode=disable",
+			user, password, host, dbname,
+		)
+		fmt.Printf("conninfo=%s\n", conninfo)
+		db, err = gorm.Open("postgres", conninfo)
 	case "foundation":
 		fmt.Println("testing foundation...")
 		db, err = gorm.Open("foundation", "dbname=gorm port=15432 sslmode=disable")
