@@ -1,8 +1,16 @@
 package gorm
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 func BeforeDelete(scope *Scope) {
+	if !scope.hasConditions() {
+		scope.Err(errors.New("no WHERE clause while deleting"))
+		return
+	}
+
 	scope.CallMethodWithErrorCheck("BeforeDelete")
 }
 

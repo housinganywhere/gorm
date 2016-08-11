@@ -419,3 +419,39 @@ func TestUpdateColumnsSkipsAssociations(t *testing.T) {
 		t.Errorf("Expected user's BillingAddress.Address1=%s to remain unchanged after UpdateColumns invocation, but BillingAddress.Address1=%s", address1, freshUser.BillingAddress.Address1)
 	}
 }
+
+func TestUpdateAll(t *testing.T) {
+	card1, card2 := CreditCard{Number: "1111"}, CreditCard{Number: "2222"}
+	DB.Save(&card1)
+	DB.Save(&card2)
+
+	if err := DB.Model(&CreditCard{}).Update("number", "0000").Error; err == nil {
+		t.Errorf("Update query with no conditions should fail")
+	}
+	if err := DB.Model(&CreditCard{}).Updates(
+		CreditCard{Number: "0000"}).Error; err == nil {
+		t.Errorf("Updates query with no conditions should fail")
+	}
+	if err := DB.Model(&CreditCard{}).Updates(
+		map[string]interface{}{"number": "0000"}).Error; err == nil {
+		t.Errorf("Updates query with no conditions should fail")
+	}
+	if err := DB.Model(&CreditCard{}).UpdateColumn("number", "0000").Error; err == nil {
+		t.Errorf("UpdateColumn query with no conditions should fail")
+	}
+	if err := DB.Model(&CreditCard{}).UpdateColumns(
+		CreditCard{Number: "0000"}).Error; err == nil {
+		t.Errorf("UpdateColumns query with no conditions should fail")
+	}
+	if err := DB.Model(&CreditCard{}).UpdateColumns(
+		map[string]interface{}{"number": "0000"}).Error; err == nil {
+		t.Errorf("UpdateColumns query with no conditions should fail")
+	}
+
+	if DB.Where("number = ?", card1.Number).First(&CreditCard{}).RecordNotFound() {
+		t.Errorf("Cards that not updated should be found-able")
+	}
+	if DB.Where("number = ?", card2.Number).First(&CreditCard{}).RecordNotFound() {
+		t.Errorf("Cards that not updated should be found-able")
+	}
+}

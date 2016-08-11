@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -25,6 +26,11 @@ func AssignUpdateAttributes(scope *Scope) {
 }
 
 func BeforeUpdate(scope *Scope) {
+	if !scope.hasConditions() {
+		scope.Err(errors.New("no WHERE clause while updating"))
+		return
+	}
+
 	if _, ok := scope.Get("gorm:update_column"); !ok {
 		scope.CallMethodWithErrorCheck("BeforeSave")
 		scope.CallMethodWithErrorCheck("BeforeUpdate")
