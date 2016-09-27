@@ -45,7 +45,7 @@ func TestSoftDelete(t *testing.T) {
 	type User struct {
 		Id        int64
 		Name      string
-		DeletedAt time.Time
+		DeletedAt *time.Time
 	}
 	DB.AutoMigrate(&User{})
 
@@ -64,5 +64,23 @@ func TestSoftDelete(t *testing.T) {
 	DB.Unscoped().Delete(&user)
 	if !DB.Unscoped().First(&User{}, "name = ?", user.Name).RecordNotFound() {
 		t.Errorf("Can't find permanently deleted record")
+	}
+}
+
+func TestDeleteAll(t *testing.T) {
+	card1, card2 := CreditCard{Number: "1111"}, CreditCard{Number: "2222"}
+	DB.Save(&card1)
+	DB.Save(&card2)
+
+	if err := DB.Delete(&CreditCard{}).Error; err == nil {
+		t.Errorf("Delete queries with no conditions should fail")
+	}
+
+	if DB.Where("number = ?", card1.Number).First(&CreditCard{}).RecordNotFound() {
+		t.Errorf("Cards that not deleted should be found-able")
+	}
+
+	if DB.Where("number = ?", card2.Number).First(&CreditCard{}).RecordNotFound() {
+		t.Errorf("Cards that not deleted should be found-able")
 	}
 }
