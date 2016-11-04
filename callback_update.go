@@ -32,8 +32,8 @@ func assignUpdatingAttributesCallback(scope *Scope) {
 
 // beforeUpdateCallback will invoke `BeforeSave`, `BeforeUpdate` method before updating
 func beforeUpdateCallback(scope *Scope) {
-	if !scope.hasConditions() {
-		scope.Err(errors.New("no WHERE clause while updating"))
+	if scope.DB().HasBlockGlobalUpdate() && !scope.hasConditions() {
+		scope.Err(errors.New("Missing WHERE clause while updating"))
 		return
 	}
 

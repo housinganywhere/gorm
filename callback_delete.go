@@ -16,8 +16,8 @@ func init() {
 
 // beforeDeleteCallback will invoke `BeforeDelete` method before deleting
 func beforeDeleteCallback(scope *Scope) {
-	if !scope.hasConditions() {
-		scope.Err(errors.New("no WHERE clause while deleting"))
+	if scope.DB().HasBlockGlobalUpdate() && !scope.hasConditions() {
+		scope.Err(errors.New("Missing WHERE clause while deleting"))
 		return
 	}
 
