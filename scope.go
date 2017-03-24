@@ -662,7 +662,8 @@ func (scope *Scope) buildSelectQuery(clause map[string]interface{}) (str string)
 }
 
 func (scope *Scope) hasConditions() bool {
-	return !scope.PrimaryKeyZero() || len(scope.whereSQL()) > 0
+	testScope := *scope
+	return !testScope.PrimaryKeyZero() || len(testScope.whereSQL()) > 0
 }
 
 func (scope *Scope) whereSQL() (sql string) {
