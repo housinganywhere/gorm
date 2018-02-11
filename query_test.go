@@ -2,7 +2,6 @@ package gorm_test
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/housinganywhere/gorm"
@@ -684,7 +683,7 @@ func TestPluckWithSelect(t *testing.T) {
 		combineUserAgeSQL = fmt.Sprintf("concat(%v, %v)", DB.Dialect().Quote("name"), DB.Dialect().Quote("age"))
 	)
 
-	if dialect := os.Getenv("GORM_DIALECT"); dialect == "sqlite" {
+	if dialect := DB.Dialect().GetName(); dialect == "sqlite3" {
 		combineUserAgeSQL = fmt.Sprintf("(%v || %v)", DB.Dialect().Quote("name"), DB.Dialect().Quote("age"))
 	}
 
