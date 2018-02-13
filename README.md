@@ -55,9 +55,11 @@ https://github.com/housinganywhere/gorm/graphs/contributors
 Released under the [MIT License](https://github.com/housinganywhere/gorm/blob/master/License).
 =======
 [Become a backer or sponsor on Open Collective](http://opencollective.com/gorm)
+
 [Become a backer or sponsor on Patreon](http://patreon.com/jinzhu)
 
 ## License
 
-© 2013~`time.Now()`, Jinzhu
+© Jinzhu, 2013~time.Now
+
 Released under the [MIT License](https://github.com/jinzhu/gorm/blob/master/License)
