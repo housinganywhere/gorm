@@ -15,7 +15,7 @@ The fantastic ORM library for Golang, aims to be developer friendly.
 
 * Full-Featured ORM (almost)
 * Associations (Has One, Has Many, Belongs To, Many To Many, Polymorphism)
-* Callbacks (Before/After Create/Save/Update/Delete/Find)
+* Hooks (Before/After Create/Save/Update/Delete/Find)
 * Preloading (eager loading)
 * Transactions
 * Composite Primary Key
@@ -57,6 +57,8 @@ Released under the [MIT License](https://github.com/housinganywhere/gorm/blob/ma
 [Become a backer or sponsor on Open Collective](http://opencollective.com/gorm)
 
 [Become a backer or sponsor on Patreon](http://patreon.com/jinzhu)
+
+[You can help to deliver a better GORM, check out things you can do](http://gorm.io/contribute.html)
 
 ## License
 
