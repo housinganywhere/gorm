@@ -468,6 +468,7 @@ func TestUpdateAll(t *testing.T) {
 	card1, card2 := CreditCard{Number: "1111"}, CreditCard{Number: "2222"}
 	DB.Save(&card1)
 	DB.Save(&card2)
+	DB.BlockGlobalUpdate(true)
 
 	if err := DB.Model(&CreditCard{}).Update("number", "0000").Error; err == nil {
 		t.Errorf("Update query with no conditions should fail")

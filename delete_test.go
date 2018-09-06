@@ -71,6 +71,7 @@ func TestDeleteAll(t *testing.T) {
 	card1, card2 := CreditCard{Number: "1111"}, CreditCard{Number: "2222"}
 	DB.Save(&card1)
 	DB.Save(&card2)
+	DB.BlockGlobalUpdate(true)
 
 	if err := DB.Delete(&CreditCard{}).Error; err == nil {
 		t.Errorf("Delete queries with no conditions should fail")
@@ -82,7 +83,7 @@ func TestDeleteAll(t *testing.T) {
 
 	if DB.Where("number = ?", card2.Number).First(&CreditCard{}).RecordNotFound() {
 		t.Errorf("Cards that not deleted should be found-able")
-        }
+	}
 }
 
 func TestSoftDeleteWithCustomizedDeletedAtColumnName(t *testing.T) {

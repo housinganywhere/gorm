@@ -2,11 +2,8 @@ package gorm_test
 
 import (
 	"fmt"
-	"reflect"
-
 	"github.com/housinganywhere/gorm"
-	"github.com/jinzhu/now"
-
+	"reflect"
 	"testing"
 	"time"
 )
