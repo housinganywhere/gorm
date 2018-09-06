@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,44 +37,31 @@ func init() {
 }
 
 func OpenTestConnection() (db *gorm.DB, err error) {
-	host := os.Getenv("HOST")
-	if host == "" {
-		host = "localhost"
-	}
-	dbname := os.Getenv("DBNAME")
-	if dbname == "" {
-		dbname = "gorm"
-	}
-	user := os.Getenv("USER")
-	if user == "" {
-		user = "gorm"
-	}
-	password := os.Getenv("PASSWORD")
-
+	dbDSN := os.Getenv("GORM_DSN")
 	switch os.Getenv("GORM_DIALECT") {
 	case "mysql":
-		// CREATE USER 'gorm'@'localhost' IDENTIFIED BY 'gorm';
-		// CREATE DATABASE gorm;
-		// GRANT ALL ON gorm.* TO 'gorm'@'localhost';
 		fmt.Println("testing mysql...")
-		uri := fmt.Sprintf(
-			"%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True",
-			user, password, dbname, host,
-		)
-		db, err = gorm.Open("mysql", uri)
+		if dbDSN == "" {
+			dbDSN = "gorm:gorm@tcp(localhost:9910)/gorm?charset=utf8&parseTime=True"
+		}
+		db, err = gorm.Open("mysql", dbDSN)
 	case "postgres":
 		fmt.Println("testing postgres...")
-		conninfo := fmt.Sprintf(
-			"user=%s password=%s host=%s dbname=%s sslmode=disable",
-			user, password, host, dbname,
-		)
-		db, err = gorm.Open("postgres", conninfo)
-	case "foundation":
-		fmt.Println("testing foundation...")
-		db, err = gorm.Open("foundation", "dbname=gorm port=15432 sslmode=disable")
+		if dbDSN == "" {
+			dbDSN = "user=gorm password=gorm DB.name=gorm port=9920 sslmode=disable"
+		}
+		db, err = gorm.Open("postgres", dbDSN)
 	case "mssql":
+		// CREATE LOGIN gorm WITH PASSWORD = 'LoremIpsum86';
+		// CREATE DATABASE gorm;
+		// USE gorm;
+		// CREATE USER gorm FROM LOGIN gorm;
+		// sp_changedbowner 'gorm';
 		fmt.Println("testing mssql...")
-		db, err = gorm.Open("mssql", "server=SERVER_HERE;database=rogue;user id=USER_HERE;password=PW_HERE;port=1433")
+		if dbDSN == "" {
+			dbDSN = "sqlserver://gorm:LoremIpsum86@localhost:9930?database=gorm"
+		}
+		db, err = gorm.Open("mssql", dbDSN)
 	default:
 		fmt.Println("testing sqlite3...")
 		db, err = gorm.Open("sqlite3", filepath.Join(os.TempDir(), "gorm.db"))
@@ -81,13 +69,31 @@ func OpenTestConnection() (db *gorm.DB, err error) {
 
 	// db.SetLogger(Logger{log.New(os.Stdout, "\r\n", 0)})
 	// db.SetLogger(log.New(os.Stdout, "\r\n", 0))
-	if os.Getenv("DEBUG") == "true" {
+	if debug := os.Getenv("DEBUG"); debug == "true" {
 		db.LogMode(true)
+	} else if debug == "false" {
+		db.LogMode(false)
 	}
 
 	db.DB().SetMaxIdleConns(10)
 
 	return
+}
+
+func TestOpen_ReturnsError_WithBadArgs(t *testing.T) {
+	stringRef := "foo"
+	testCases := []interface{}{42, time.Now(), &stringRef}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%v", tc), func(t *testing.T) {
+			_, err := gorm.Open("postgresql", tc)
+			if err == nil {
+				t.Error("Should got error with invalid database source")
+			}
+			if !strings.HasPrefix(err.Error(), "invalid database source:") {
+				t.Errorf("Should got error starting with \"invalid database source:\", but got %q", err.Error())
+			}
+		})
+	}
 }
 
 func TestStringPrimaryKey(t *testing.T) {
@@ -329,8 +335,14 @@ func TestNullValuesWithFirstOrCreate(t *testing.T) {
 	}
 
 	var nv2 NullValue
-	if err := DB.Where(nv1).FirstOrCreate(&nv2).Error; err != nil {
-		t.Errorf("Should not raise any error, but got %v", err)
+	result := DB.Where(nv1).FirstOrCreate(&nv2)
+
+	if result.RowsAffected != 1 {
+		t.Errorf("RowsAffected should be 1 after create some record")
+	}
+
+	if result.Error != nil {
+		t.Errorf("Should not raise any error, but got %v", result.Error)
 	}
 
 	if nv2.Name.String != "first_or_create" || nv2.Gender.String != "M" {
@@ -385,9 +397,9 @@ func TestTransaction(t *testing.T) {
 }
 
 func TestRow(t *testing.T) {
-	user1 := User{Name: "RowUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "RowUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "RowUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "RowUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "RowUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "RowUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	row := DB.Table("users").Where("name = ?", user2.Name).Select("age").Row()
@@ -399,9 +411,9 @@ func TestRow(t *testing.T) {
 }
 
 func TestRows(t *testing.T) {
-	user1 := User{Name: "RowsUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "RowsUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "RowsUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "RowsUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "RowsUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "RowsUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	rows, err := DB.Table("users").Where("name = ? or name = ?", user2.Name, user3.Name).Select("name, age").Rows()
@@ -423,9 +435,9 @@ func TestRows(t *testing.T) {
 }
 
 func TestScanRows(t *testing.T) {
-	user1 := User{Name: "ScanRowsUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "ScanRowsUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "ScanRowsUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "ScanRowsUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "ScanRowsUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "ScanRowsUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	rows, err := DB.Table("users").Where("name = ? or name = ?", user2.Name, user3.Name).Select("name, age").Rows()
@@ -453,9 +465,9 @@ func TestScanRows(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	user1 := User{Name: "ScanUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "ScanUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "ScanUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "ScanUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "ScanUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "ScanUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	type result struct {
@@ -469,8 +481,10 @@ func TestScan(t *testing.T) {
 		t.Errorf("Scan into struct should work")
 	}
 
-	var doubleAgeRes result
-	DB.Table("users").Select("age + age as age").Where("name = ?", user3.Name).Scan(&doubleAgeRes)
+	var doubleAgeRes = &result{}
+	if err := DB.Table("users").Select("age + age as age").Where("name = ?", user3.Name).Scan(&doubleAgeRes).Error; err != nil {
+		t.Errorf("Scan to pointer of pointer")
+	}
 	if doubleAgeRes.Age != res.Age*2 {
 		t.Errorf("Scan double age as age")
 	}
@@ -483,9 +497,9 @@ func TestScan(t *testing.T) {
 }
 
 func TestRaw(t *testing.T) {
-	user1 := User{Name: "ExecRawSqlUser1", Age: 1, Birthday: now.MustParse("2000-1-1")}
-	user2 := User{Name: "ExecRawSqlUser2", Age: 10, Birthday: now.MustParse("2010-1-1")}
-	user3 := User{Name: "ExecRawSqlUser3", Age: 20, Birthday: now.MustParse("2020-1-1")}
+	user1 := User{Name: "ExecRawSqlUser1", Age: 1, Birthday: parseTime("2000-1-1")}
+	user2 := User{Name: "ExecRawSqlUser2", Age: 10, Birthday: parseTime("2010-1-1")}
+	user3 := User{Name: "ExecRawSqlUser3", Age: 20, Birthday: parseTime("2020-1-1")}
 	DB.Save(&user1).Save(&user2).Save(&user3)
 
 	type result struct {
@@ -608,9 +622,95 @@ func TestHaving(t *testing.T) {
 	}
 }
 
+func TestQueryBuilderSubselectInWhere(t *testing.T) {
+	user := User{Name: "query_expr_select_ruser1", Email: "root@user1.com", Age: 32}
+	DB.Save(&user)
+	user = User{Name: "query_expr_select_ruser2", Email: "nobody@user2.com", Age: 16}
+	DB.Save(&user)
+	user = User{Name: "query_expr_select_ruser3", Email: "root@user3.com", Age: 64}
+	DB.Save(&user)
+	user = User{Name: "query_expr_select_ruser4", Email: "somebody@user3.com", Age: 128}
+	DB.Save(&user)
+
+	var users []User
+	DB.Select("*").Where("name IN (?)", DB.
+		Select("name").Table("users").Where("name LIKE ?", "query_expr_select%").QueryExpr()).Find(&users)
+
+	if len(users) != 4 {
+		t.Errorf("Four users should be found, instead found %d", len(users))
+	}
+
+	DB.Select("*").Where("name LIKE ?", "query_expr_select%").Where("age >= (?)", DB.
+		Select("AVG(age)").Table("users").Where("name LIKE ?", "query_expr_select%").QueryExpr()).Find(&users)
+
+	if len(users) != 2 {
+		t.Errorf("Two users should be found, instead found %d", len(users))
+	}
+}
+
+func TestQueryBuilderRawQueryWithSubquery(t *testing.T) {
+	user := User{Name: "subquery_test_user1", Age: 10}
+	DB.Save(&user)
+	user = User{Name: "subquery_test_user2", Age: 11}
+	DB.Save(&user)
+	user = User{Name: "subquery_test_user3", Age: 12}
+	DB.Save(&user)
+
+	var count int
+	err := DB.Raw("select count(*) from (?) tmp",
+		DB.Table("users").
+			Select("name").
+			Where("age >= ? and name in (?)", 10, []string{"subquery_test_user1", "subquery_test_user2"}).
+			Group("name").
+			QueryExpr(),
+	).Count(&count).Error
+
+	if err != nil {
+		t.Errorf("Expected to get no errors, but got %v", err)
+	}
+	if count != 2 {
+		t.Errorf("Row count must be 2, instead got %d", count)
+	}
+
+	err = DB.Raw("select count(*) from (?) tmp",
+		DB.Table("users").
+			Select("name").
+			Where("name LIKE ?", "subquery_test%").
+			Not("age <= ?", 10).Not("name in (?)", []string{"subquery_test_user1", "subquery_test_user2"}).
+			Group("name").
+			QueryExpr(),
+	).Count(&count).Error
+
+	if err != nil {
+		t.Errorf("Expected to get no errors, but got %v", err)
+	}
+	if count != 1 {
+		t.Errorf("Row count must be 1, instead got %d", count)
+	}
+}
+
+func TestQueryBuilderSubselectInHaving(t *testing.T) {
+	user := User{Name: "query_expr_having_ruser1", Email: "root@user1.com", Age: 64}
+	DB.Save(&user)
+	user = User{Name: "query_expr_having_ruser2", Email: "root@user2.com", Age: 128}
+	DB.Save(&user)
+	user = User{Name: "query_expr_having_ruser3", Email: "root@user1.com", Age: 64}
+	DB.Save(&user)
+	user = User{Name: "query_expr_having_ruser4", Email: "root@user2.com", Age: 128}
+	DB.Save(&user)
+
+	var users []User
+	DB.Select("AVG(age) as avgage").Where("name LIKE ?", "query_expr_having_%").Group("email").Having("AVG(age) > (?)", DB.
+		Select("AVG(age)").Where("name LIKE ?", "query_expr_having_%").Table("users").QueryExpr()).Find(&users)
+
+	if len(users) != 1 {
+		t.Errorf("Two user group should be found, instead found %d", len(users))
+	}
+}
+
 func DialectHasTzSupport() bool {
 	// NB: mssql and FoundationDB do not support time zones.
-	if dialect := os.Getenv("GORM_DIALECT"); dialect == "mssql" || dialect == "foundation" {
+	if dialect := os.Getenv("GORM_DIALECT"); dialect == "foundation" {
 		return false
 	}
 	return true
@@ -625,11 +725,12 @@ func TestTimeWithZone(t *testing.T) {
 
 	for index, vtime := range times {
 		name := "time_with_zone_" + strconv.Itoa(index)
-		user := User{Name: name, Birthday: vtime}
+		user := User{Name: name, Birthday: &vtime}
 
 		if !DialectHasTzSupport() {
 			// If our driver dialect doesn't support TZ's, just use UTC for everything here.
-			user.Birthday = vtime.UTC()
+			utcBirthday := user.Birthday.UTC()
+			user.Birthday = &utcBirthday
 		}
 
 		DB.Save(&user)
@@ -768,15 +869,152 @@ func TestDdlErrors(t *testing.T) {
 	}
 }
 
+func TestOpenWithOneParameter(t *testing.T) {
+	db, err := gorm.Open("dialect")
+	if db != nil {
+		t.Error("Open with one parameter returned non nil for db")
+	}
+	if err == nil {
+		t.Error("Open with one parameter returned err as nil")
+	}
+}
+
+func TestSaveAssociations(t *testing.T) {
+	db := DB.New()
+	deltaAddressCount := 0
+	if err := db.Model(&Address{}).Count(&deltaAddressCount).Error; err != nil {
+		t.Errorf("failed to fetch address count")
+		t.FailNow()
+	}
+
+	placeAddress := &Address{
+		Address1: "somewhere on earth",
+	}
+	ownerAddress1 := &Address{
+		Address1: "near place address",
+	}
+	ownerAddress2 := &Address{
+		Address1: "address2",
+	}
+	db.Create(placeAddress)
+
+	addressCountShouldBe := func(t *testing.T, expectedCount int) {
+		countFromDB := 0
+		t.Helper()
+		err := db.Model(&Address{}).Count(&countFromDB).Error
+		if err != nil {
+			t.Error("failed to fetch address count")
+		}
+		if countFromDB != expectedCount {
+			t.Errorf("address count mismatch: %d", countFromDB)
+		}
+	}
+	addressCountShouldBe(t, deltaAddressCount+1)
+
+	// owner address should be created, place address should be reused
+	place1 := &Place{
+		PlaceAddressID: placeAddress.ID,
+		PlaceAddress:   placeAddress,
+		OwnerAddress:   ownerAddress1,
+	}
+	err := db.Create(place1).Error
+	if err != nil {
+		t.Errorf("failed to store place: %s", err.Error())
+	}
+	addressCountShouldBe(t, deltaAddressCount+2)
+
+	// owner address should be created again, place address should be reused
+	place2 := &Place{
+		PlaceAddressID: placeAddress.ID,
+		PlaceAddress: &Address{
+			ID:       777,
+			Address1: "address1",
+		},
+		OwnerAddress:   ownerAddress2,
+		OwnerAddressID: 778,
+	}
+	err = db.Create(place2).Error
+	if err != nil {
+		t.Errorf("failed to store place: %s", err.Error())
+	}
+	addressCountShouldBe(t, deltaAddressCount+3)
+
+	count := 0
+	db.Model(&Place{}).Where(&Place{
+		PlaceAddressID: placeAddress.ID,
+		OwnerAddressID: ownerAddress1.ID,
+	}).Count(&count)
+	if count != 1 {
+		t.Errorf("only one instance of (%d, %d) should be available, found: %d",
+			placeAddress.ID, ownerAddress1.ID, count)
+	}
+
+	db.Model(&Place{}).Where(&Place{
+		PlaceAddressID: placeAddress.ID,
+		OwnerAddressID: ownerAddress2.ID,
+	}).Count(&count)
+	if count != 1 {
+		t.Errorf("only one instance of (%d, %d) should be available, found: %d",
+			placeAddress.ID, ownerAddress2.ID, count)
+	}
+
+	db.Model(&Place{}).Where(&Place{
+		PlaceAddressID: placeAddress.ID,
+	}).Count(&count)
+	if count != 2 {
+		t.Errorf("two instances of (%d) should be available, found: %d",
+			placeAddress.ID, count)
+	}
+}
+
+func TestBlockGlobalUpdate(t *testing.T) {
+	db := DB.New()
+	db.Create(&Toy{Name: "Stuffed Animal", OwnerType: "Nobody"})
+
+	err := db.Model(&Toy{}).Update("OwnerType", "Human").Error
+	if err != nil {
+		t.Error("Unexpected error on global update")
+	}
+
+	err = db.Delete(&Toy{}).Error
+	if err != nil {
+		t.Error("Unexpected error on global delete")
+	}
+
+	db.BlockGlobalUpdate(true)
+
+	db.Create(&Toy{Name: "Stuffed Animal", OwnerType: "Nobody"})
+
+	err = db.Model(&Toy{}).Update("OwnerType", "Human").Error
+	if err == nil {
+		t.Error("Expected error on global update")
+	}
+
+	err = db.Model(&Toy{}).Where(&Toy{OwnerType: "Martian"}).Update("OwnerType", "Astronaut").Error
+	if err != nil {
+		t.Error("Unxpected error on conditional update")
+	}
+
+	err = db.Delete(&Toy{}).Error
+	if err == nil {
+		t.Error("Expected error on global delete")
+	}
+	err = db.Where(&Toy{OwnerType: "Martian"}).Delete(&Toy{}).Error
+	if err != nil {
+		t.Error("Unexpected error on conditional delete")
+	}
+}
+
 func BenchmarkGorm(b *testing.B) {
 	b.N = 2000
 	for x := 0; x < b.N; x++ {
 		e := strconv.Itoa(x) + "benchmark@example.org"
-		email := BigEmail{Email: e, UserAgent: "pc", RegisteredAt: time.Now()}
+		now := time.Now()
+		email := EmailWithIdx{Email: e, UserAgent: "pc", RegisteredAt: &now}
 		// Insert
 		DB.Save(&email)
 		// Query
-		DB.First(&BigEmail{}, "email = ?", e)
+		DB.First(&EmailWithIdx{}, "email = ?", e)
 		// Update
 		DB.Model(&email).UpdateColumn("email", "new-"+e)
 		// Delete
@@ -796,7 +1034,8 @@ func BenchmarkRawSql(b *testing.B) {
 	for x := 0; x < b.N; x++ {
 		var id int64
 		e := strconv.Itoa(x) + "benchmark@example.org"
-		email := BigEmail{Email: e, UserAgent: "pc", RegisteredAt: time.Now()}
+		now := time.Now()
+		email := EmailWithIdx{Email: e, UserAgent: "pc", RegisteredAt: &now}
 		// Insert
 		DB.QueryRow(insertSql, email.UserId, email.Email, email.UserAgent, email.RegisteredAt, time.Now(), time.Now()).Scan(&id)
 		// Query
@@ -807,4 +1046,9 @@ func BenchmarkRawSql(b *testing.B) {
 		// Delete
 		DB.Exec(deleteSql, id)
 	}
+}
+
+func parseTime(str string) *time.Time {
+	t := now.New(time.Now().UTC()).MustParse(str)
+	return &t
 }

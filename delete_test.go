@@ -71,6 +71,7 @@ func TestDeleteAll(t *testing.T) {
 	card1, card2 := CreditCard{Number: "1111"}, CreditCard{Number: "2222"}
 	DB.Save(&card1)
 	DB.Save(&card2)
+	DB.BlockGlobalUpdate(true)
 
 	if err := DB.Delete(&CreditCard{}).Error; err == nil {
 		t.Errorf("Delete queries with no conditions should fail")
@@ -82,5 +83,28 @@ func TestDeleteAll(t *testing.T) {
 
 	if DB.Where("number = ?", card2.Number).First(&CreditCard{}).RecordNotFound() {
 		t.Errorf("Cards that not deleted should be found-able")
+	}
+}
+
+func TestSoftDeleteWithCustomizedDeletedAtColumnName(t *testing.T) {
+	creditCard := CreditCard{Number: "411111111234567"}
+	DB.Save(&creditCard)
+	DB.Delete(&creditCard)
+
+	if deletedAtField, ok := DB.NewScope(&CreditCard{}).FieldByName("DeletedAt"); !ok || deletedAtField.DBName != "deleted_time" {
+		t.Errorf("CreditCard's DeletedAt's column name should be `deleted_time`")
+	}
+
+	if DB.First(&CreditCard{}, "number = ?", creditCard.Number).Error == nil {
+		t.Errorf("Can't find a soft deleted record")
+	}
+
+	if err := DB.Unscoped().First(&CreditCard{}, "number = ?", creditCard.Number).Error; err != nil {
+		t.Errorf("Should be able to find soft deleted record with Unscoped, but err=%s", err)
+	}
+
+	DB.Unscoped().Delete(&creditCard)
+	if !DB.Unscoped().First(&CreditCard{}, "number = ?", creditCard.Number).RecordNotFound() {
+		t.Errorf("Can't find permanently deleted record")
 	}
 }
