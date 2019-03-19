@@ -1,6 +1,8 @@
 package gorm_test
 
 import (
+	"time"
+
 	"github.com/housinganywhere/gorm"
 	"testing"
 )
@@ -39,5 +41,19 @@ func TestScopes(t *testing.T) {
 	DB.Scopes(NameIn([]string{user1.Name, user3.Name})).Find(&users3)
 	if len(users3) != 2 {
 		t.Errorf("Should found two users's name in 1, 3")
+	}
+}
+
+func TestAddToVars(t *testing.T) {
+	secondsEastOfUTC := int((8 * time.Hour).Seconds())
+	testLoc := time.FixedZone("test TZ", secondsEastOfUTC)
+	tm := time.Date(2016, 2, 10, 15, 12, 0, 0, testLoc)
+	scope := DB.NewScope(nil)
+	scope.AddToVars(tm)
+	if len(scope.SQLVars) != 1 {
+		t.Errorf("Expected sql vars slice to be 1 element")
+	}
+	if scope.SQLVars[0] != tm.UTC() {
+		t.Errorf("Expected time to be casted to UTC")
 	}
 }
