@@ -768,6 +768,28 @@ func TestDdlErrors(t *testing.T) {
 	}
 }
 
+func TestToUTC(t *testing.T) {
+	secondsEastOfUTC := int((8 * time.Hour).Seconds())
+	testLoc := time.FixedZone("test TZ", secondsEastOfUTC)
+	tm := time.Date(2016, 2, 10, 15, 12, 0, 0, testLoc)
+
+	str := "test string"
+	res := gorm.ToUTC(str)
+	if tmp, ok := res.(string); !ok || str != tmp {
+		t.Errorf("Expected ToUTC would not change string (%v)", res)
+	}
+
+	res = gorm.ToUTC(tm)
+	if tmp, ok := res.(time.Time); !ok || tmp.Location() != time.UTC {
+		t.Errorf("Expected ToUTC would change timezone on timestamp (%v, %v)", res, tmp.Location())
+	}
+
+	res = gorm.ToUTC(&tm)
+	if tmp, ok := res.(*time.Time); !ok || tmp.Location() != time.UTC {
+		t.Errorf("Expected ToUTC would change timezone on timestamp (%v, %v)", res, tmp.Location())
+	}
+}
+
 func BenchmarkGorm(b *testing.B) {
 	b.N = 2000
 	for x := 0; x < b.N; x++ {

@@ -719,5 +719,9 @@ func ToUTC(v interface{}) interface{} {
 	if tm, ok := v.(time.Time); ok {
 		return tm.UTC()
 	}
+	if tm, ok := v.(*time.Time); ok && tm != nil {
+		tm2 := tm.UTC()
+		return &tm2
+	}
 	return v
 }
