@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/housinganywhere/gorm/clause"
 	"github.com/housinganywhere/gorm/logger"
@@ -159,7 +160,7 @@ func (stmt *Statement) AddVar(writer clause.Writer, vars ...interface{}) {
 
 		switch v := v.(type) {
 		case sql.NamedArg:
-			stmt.Vars = append(stmt.Vars, v.Value)
+			stmt.Vars = append(stmt.Vars, toUTC(v.Value))
 		case clause.Column, clause.Table:
 			stmt.QuoteTo(writer, v)
 		case Valuer:
@@ -168,6 +169,7 @@ func (stmt *Statement) AddVar(writer clause.Writer, vars ...interface{}) {
 			var varStr strings.Builder
 			var sql = v.SQL
 			for _, arg := range v.Vars {
+				arg = toUTC(arg)
 				stmt.Vars = append(stmt.Vars, arg)
 				stmt.DB.Dialector.BindVarTo(&varStr, stmt, arg)
 				sql = strings.Replace(sql, "?", varStr.String(), 1)
@@ -211,6 +213,7 @@ func (stmt *Statement) AddVar(writer clause.Writer, vars ...interface{}) {
 					writer.WriteByte(')')
 				}
 			default:
+				v = toUTC(v)
 				stmt.Vars = append(stmt.Vars, v)
 				stmt.DB.Dialector.BindVarTo(writer, stmt, v)
 			}
@@ -591,4 +594,16 @@ func (stmt *Statement) SelectAndOmitColumns(requireCreate, requireUpdate bool) (
 	}
 
 	return results, !notRestricted && len(stmt.Selects) > 0
+}
+
+// housinganywhere (author: jakub@slocki.net) force UTC on db communication
+func toUTC(v interface{}) interface{} {
+	if tm, ok := v.(time.Time); ok {
+		return tm.UTC()
+	}
+	if tm, ok := v.(*time.Time); ok && tm != nil {
+		tm2 := tm.UTC()
+		return &tm2
+	}
+	return v
 }
