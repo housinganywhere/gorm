@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
-	"gorm.io/gorm/utils/tests"
+	"github.com/housinganywhere/gorm"
+	"github.com/housinganywhere/gorm/schema"
+	"github.com/housinganywhere/gorm/utils/tests"
 )
 
 func TestFieldValuerAndSetter(t *testing.T) {

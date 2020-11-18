@@ -1,8 +1,8 @@
 package gorm
 
 import (
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
+	"github.com/housinganywhere/gorm/clause"
+	"github.com/housinganywhere/gorm/schema"
 )
 
 // Migrator returns migrator

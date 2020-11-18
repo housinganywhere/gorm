@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"gorm.io/gorm"
-	. "gorm.io/gorm/utils/tests"
+	"github.com/housinganywhere/gorm"
+	. "github.com/housinganywhere/gorm/utils/tests"
 )
 
 func TestScan(t *testing.T) {

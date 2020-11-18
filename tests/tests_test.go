@@ -11,9 +11,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/driver/sqlserver"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-	. "gorm.io/gorm/utils/tests"
+	"github.com/housinganywhere/gorm"
+	"github.com/housinganywhere/gorm/logger"
+	. "github.com/housinganywhere/gorm/utils/tests"
 )
 
 var DB *gorm.DB

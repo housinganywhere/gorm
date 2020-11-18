@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
+	"github.com/housinganywhere/gorm"
+	"github.com/housinganywhere/gorm/schema"
 )
 
 type UserWithCallback struct {

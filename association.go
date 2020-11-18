@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"strings"
 
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
-	"gorm.io/gorm/utils"
+	"github.com/housinganywhere/gorm/clause"
+	"github.com/housinganywhere/gorm/schema"
+	"github.com/housinganywhere/gorm/utils"
 )
 
 // Association Mode contains some helper methods to handle relationship things easily.

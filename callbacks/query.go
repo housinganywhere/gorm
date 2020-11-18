@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"gorm.io/gorm/schema"
+	"github.com/housinganywhere/gorm"
+	"github.com/housinganywhere/gorm/clause"
+	"github.com/housinganywhere/gorm/schema"
 )
 
 func Query(db *gorm.DB) {

@@ -1,4 +1,4 @@
-module gorm.io/gorm/tests
+module github.com/housinganywhere/gorm/tests
 
 go 1.14
 
@@ -10,7 +10,7 @@ require (
 	gorm.io/driver/postgres v1.0.5
 	gorm.io/driver/sqlite v1.1.3
 	gorm.io/driver/sqlserver v1.0.5
-	gorm.io/gorm v1.20.5
+	github.com/housinganywhere/gorm v1.20.5
 )
 
-replace gorm.io/gorm => ../
+replace github.com/housinganywhere/gorm => ../

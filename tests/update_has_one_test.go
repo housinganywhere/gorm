@@ -3,8 +3,8 @@ package tests_test
 import (
 	"testing"
 
-	"gorm.io/gorm"
-	. "gorm.io/gorm/utils/tests"
+	"github.com/housinganywhere/gorm"
+	. "github.com/housinganywhere/gorm/utils/tests"
 )
 
 func TestUpdateHasOne(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"gorm.io/gorm/schema"
+	"github.com/housinganywhere/gorm/schema"
 )
 
 type UserCheck struct {

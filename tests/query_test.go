@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	. "gorm.io/gorm/utils/tests"
+	"github.com/housinganywhere/gorm"
+	"github.com/housinganywhere/gorm/clause"
+	. "github.com/housinganywhere/gorm/utils/tests"
 )
 
 func TestFind(t *testing.T) {

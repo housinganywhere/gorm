@@ -1,7 +1,7 @@
 package callbacks
 
 import (
-	"gorm.io/gorm"
+	"github.com/housinganywhere/gorm"
 )
 
 type Config struct {
