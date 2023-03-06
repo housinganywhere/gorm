@@ -5,12 +5,11 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-
-	"reflect"
 )
 
 // Scope contain current operation's information when you perform any operation on the database
@@ -58,7 +57,7 @@ func (scope *Scope) NewDB() *DB {
 }
 
 // SQLDB return *sql.DB
-func (scope *Scope) SQLDB() sqlCommon {
+func (scope *Scope) SQLDB() SQLCommon {
 	return scope.db.db
 }
 
@@ -204,7 +203,7 @@ func (scope *Scope) HasColumn(column string) bool {
 
 // SetColumn to set the column's value, column could be field or field's name/dbname
 func (scope *Scope) SetColumn(column interface{}, value interface{}) error {
-	var updateAttrs = map[string]interface{}{}
+	updateAttrs := map[string]interface{}{}
 	if attrs, ok := scope.InstanceGet("gorm:update_attrs"); ok {
 		updateAttrs = attrs.(map[string]interface{})
 		defer scope.InstanceSet("gorm:update_attrs", updateAttrs)
@@ -386,7 +385,7 @@ func (scope *Scope) InstanceGet(name string) (interface{}, bool) {
 func (scope *Scope) Begin() *Scope {
 	if db, ok := scope.SQLDB().(sqlDb); ok {
 		if tx, err := db.Begin(); err == nil {
-			scope.db.db = interface{}(tx).(sqlCommon)
+			scope.db.db = interface{}(tx).(SQLCommon)
 			scope.InstanceSet("gorm:started_transaction", true)
 		}
 	}
@@ -564,7 +563,7 @@ func (scope *Scope) buildWhereCondition(clause map[string]interface{}) (str stri
 
 func (scope *Scope) buildNotCondition(clause map[string]interface{}) (str string) {
 	var notEqualSQL string
-	var primaryKey = scope.PrimaryKey()
+	primaryKey := scope.PrimaryKey()
 
 	switch value := clause["query"].(type) {
 	case string:
@@ -599,7 +598,7 @@ func (scope *Scope) buildNotCondition(clause map[string]interface{}) (str string
 		return strings.Join(sqls, " AND ")
 	case interface{}:
 		var sqls []string
-		var newScope = scope.New(value)
+		newScope := scope.New(value)
 		for _, field := range newScope.Fields() {
 			if !field.IsBlank {
 				sqls = append(sqls, fmt.Sprintf("(%v.%v <> %v)", newScope.QuotedTableName(), scope.Quote(field.DBName), scope.AddToVars(field.Field.Interface())))
@@ -822,7 +821,7 @@ func (scope *Scope) callCallbacks(funcs []*func(s *Scope)) *Scope {
 }
 
 func convertInterfaceToMap(values interface{}, withIgnoredField bool) map[string]interface{} {
-	var attrs = map[string]interface{}{}
+	attrs := map[string]interface{}{}
 
 	switch value := values.(type) {
 	case map[string]interface{}:
@@ -1076,7 +1075,7 @@ func (scope *Scope) createJoinTable(field *StructField) {
 func (scope *Scope) createTable() *Scope {
 	var tags []string
 	var primaryKeys []string
-	var primaryKeyInColumnType = false
+	primaryKeyInColumnType := false
 	for _, field := range scope.GetModelStruct().StructFields {
 		if field.IsNormal {
 			sqlTag := scope.Dialect().DataTypeOf(field)
@@ -1145,7 +1144,7 @@ func (scope *Scope) addForeignKey(field string, dest string, onDelete string, on
 	if scope.Dialect().HasForeignKey(scope.TableName(), keyName) {
 		return
 	}
-	var query = `ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s ON DELETE %s ON UPDATE %s;`
+	query := `ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s ON DELETE %s ON UPDATE %s;`
 	scope.Raw(fmt.Sprintf(query, scope.QuotedTableName(), scope.quoteIfPossible(keyName), scope.quoteIfPossible(field), dest, onDelete, onUpdate)).Exec()
 }
 
@@ -1175,8 +1174,8 @@ func (scope *Scope) autoMigrate() *Scope {
 }
 
 func (scope *Scope) autoIndex() *Scope {
-	var indexes = map[string][]string{}
-	var uniqueIndexes = map[string][]string{}
+	indexes := map[string][]string{}
+	uniqueIndexes := map[string][]string{}
 
 	for _, field := range scope.GetStructFields() {
 		if name, ok := field.TagSettings["INDEX"]; ok {
@@ -1224,7 +1223,7 @@ func (scope *Scope) getColumnAsArray(columns []string, values ...interface{}) (r
 		case reflect.Slice:
 			for i := 0; i < indirectValue.Len(); i++ {
 				var result []interface{}
-				var object = indirect(indirectValue.Index(i))
+				object := indirect(indirectValue.Index(i))
 				for _, column := range columns {
 					result = append(result, object.FieldByName(column).Interface())
 				}
